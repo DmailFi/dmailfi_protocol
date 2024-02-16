@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "src/dmailfi_icp_backend"
+]
+resolver = "2"
