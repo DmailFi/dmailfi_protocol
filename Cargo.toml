@@ -1,5 +1,5 @@
 [workspace]
-members = [
+members = [ "src/dmailfi_core",
     "src/dmailfi_icp_backend"
 ]
 resolver = "2"
