@@ -27,3 +27,4 @@ dist/
 canister_ids.json
 test.json
 *.wasm
+*.py
