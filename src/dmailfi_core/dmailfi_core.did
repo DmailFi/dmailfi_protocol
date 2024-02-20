@@ -1,0 +1,64 @@
+type InboxData = record { read : bool; header : MailHeader };
+type LedgerConfiguration = record {
+  mta_url : text;
+  domain_name : text;
+  token_address : text;
+  version : text;
+  show_logs : bool;
+  permissioned : bool;
+  registry_canister : text;
+};
+type Mail = record { body : vec nat8; header : MailHeader };
+type MailError = variant {
+  PermissionedSystem;
+  NoUserAddressFound;
+  MailTransferError : text;
+  AddressExist;
+  InternalSystemMailCollision;
+  FailedToGenerateMailId;
+  NotFound;
+  NotAuthorized;
+  DomainNotFound;
+  MailNotFound;
+};
+type MailHeader = record {
+  cc : opt vec text;
+  to : vec text;
+  bcc : opt vec text;
+  subject : opt text;
+  from : text;
+  content_type : text;
+  timestamp : nat64;
+};
+type Newsletter = record { title : text; desciption : text };
+type Result = variant { Ok; Err : MailError };
+type Result_1 = variant { Ok : record { nat32; nat32 }; Err : MailError };
+type Result_2 = variant { Ok : Mail; Err : MailError };
+type Result_3 = variant { Ok : vec InboxData; Err : MailError };
+type Result_4 = variant { Ok : Newsletter; Err : MailError };
+type Result_5 = variant { Ok : vec text; Err : MailError };
+service : () -> {
+  create_newsletter : (Newsletter) -> (Result);
+  create_user : (text, text) -> (Result);
+  delete_mail : (text) -> (Result);
+  delete_self : () -> (Result);
+  delete_user : (text) -> (Result);
+  export_candid : () -> (text) query;
+  get_all_mail_count : () -> (Result_1) query;
+  get_domain_name : () -> (text) query;
+  get_mail : (text) -> (Result_2);
+  get_mail_count : () -> (Result_1) query;
+  get_mails : (opt nat64) -> (Result_3) query;
+  get_newsletter : (text) -> (Result_4) query;
+  get_newsletters : () -> (vec record { text; Newsletter }) query;
+  get_token_name : () -> (text) query;
+  get_users : () -> (Result_5) query;
+  public_create_user : (text) -> (Result);
+  restore_mail : (text) -> (Result);
+  send_mail : (Mail) -> (Result);
+  send_newsletter : (text, Mail) -> (Result);
+  submit_mail : (Mail) -> (Result);
+  subscribe_to_newsletter : (text, text) -> (Result);
+  unsubscribe_to_newsletter : (text, text) -> (Result);
+  update_configuration : (LedgerConfiguration) -> () query;
+}

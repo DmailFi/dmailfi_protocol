@@ -1,12 +1,11 @@
 use candid::{candid_method, Principal};
-use ic_cdk::{api::call::RejectionCode, caller, query, update};
-use types::{InboxData, Ledger, Mail, MailError, Newsletter, EMAIL_ADDRESS, MAIL_ID, NEWSLETTER_ID};
-mod types;
+use ic_cdk::{api::call::{arg_data, RejectionCode}, caller, init, query, update};
+use dmailfi_types::{InboxData, Ledger, LedgerConfiguration, Mail, MailError, Newsletter, EMAIL_ADDRESS, MAIL_ID, NEWSLETTER_ID};
 
-mod ledger {
+pub mod ledger {
     use std::cell::RefCell;
 
-    use crate::types::Ledger;
+    use dmailfi_types::Ledger;
 
     thread_local!(
         static LEDGER: RefCell<Ledger> = RefCell::new(Ledger::default());
@@ -20,6 +19,19 @@ mod ledger {
         LEDGER.with(|ledger| f(&mut ledger.borrow_mut()))
     }
 }
+
+
+#[init]
+#[candid_method(init)]
+fn init() {
+    let (args, ) = arg_data::<(Option<LedgerConfiguration>,)>();
+    ledger::with_mut(|ledger| {
+        if args.is_some() {
+            ledger.init(args.unwrap())
+        }
+    })
+}
+
 
 #[update]
 #[candid_method(update)]
@@ -226,9 +238,6 @@ async fn get_newsletter(n_id: NEWSLETTER_ID) -> Result<Newsletter, MailError> {
         ledger.get_newsletter(n_id)
     })
 }
-
-
-
 
 #[update]
 #[candid_method(update)]

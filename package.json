@@ -9,8 +9,7 @@
     "prebuild": "npm run prebuild --workspaces --if-present",
     "pretest": "npm run prebuild --workspaces --if-present",
     "start": "npm start --workspaces --if-present",
-    "test": "npm test --workspaces --if-present",
-    "deploy:local": "cargo build --release --target wasm32-unknown-unknown --package dmailfi_icp_backend && candid-extractor target/wasm32-unknown-unknown/release/dmailfi_icp_backend.wasm > src/dmailfi_icp_backend/dmailfi_icp_backend.did && dfx deploy"
+    "test": "npm test --workspaces --if-present"
   },
   "type": "module",
   "workspaces": [

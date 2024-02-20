@@ -93,7 +93,7 @@ If you are hosting frontend code somewhere without using DFX, you may need to ma
 - Write your own `createActor` constructor
 
 # Contributing
-We welcome contributions! Please read our CONTRIBUTING.md for details on how to submit pull requests, the process for submitting bugs, and other ways you can contribute to the project.
+Please join our discord channel [invite](https://discord.com/invite/d4S3QBNgEe) We welcome contributions! Please read our CONTRIBUTING.md for details on how to submit pull requests, the process for submitting bugs, and other ways you can contribute to the project.
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.

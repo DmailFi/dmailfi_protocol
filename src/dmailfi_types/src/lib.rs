@@ -88,7 +88,13 @@ impl<'de> Visitor<'de> for RcbytesVisitor {
     }
 
 }
-pub struct Rcbytes(Arc<serde_bytes::ByteBuf>);
+pub struct Rcbytes(pub Arc<serde_bytes::ByteBuf>);
+
+impl Rcbytes {
+    pub fn new(arc : Arc<serde_bytes::ByteBuf>) -> Self {
+        Rcbytes(arc)
+    }
+}
 
 impl CandidType for Rcbytes {
     fn _ty() -> candid::types::Type {
@@ -156,6 +162,8 @@ pub struct Profile {
     photo: Rcbytes
 }
 
+
+#[derive(CandidType, Deserialize)]
 #[derive(Default)]
 pub struct LedgerConfiguration {
     registry_canister: String,
@@ -163,7 +171,8 @@ pub struct LedgerConfiguration {
     permissioned: bool,
     mta_url: String,
     domain_name: String,
-    show_logs: bool
+    show_logs: bool,
+    version: String
 }
 #[derive(Default)]
 pub struct Ledger {
@@ -174,10 +183,11 @@ pub struct Ledger {
     mail_status: HashMap<MAIL_ID, MailStatus>,
     trash: HashMap<EMAIL_ADDRESS, HashSet<MAIL_ID>>,
     mails: HashMap<MAIL_ID, Mail>,
-    audit_logs: Vec<String>,
+    // audit_logs: Vec<String>,
     config: LedgerConfiguration,
     newsletter_subscribers: HashMap<NEWSLETTER_ID, HashMap<EMAIL_ADDRESS, Principal>>,
     newsletter: HashMap<NEWSLETTER_ID, Newsletter>,
+
 }
 
 
@@ -204,6 +214,9 @@ pub struct InboxData {
 
 
 impl Ledger {
+    pub fn init(&mut self, config : LedgerConfiguration) {
+        self.config = config
+    }
     pub fn submit_mail(&mut self, mail: Mail, intended_mail_id: String) -> Result<(), MailError> {
         let mut selected_users = vec![];
         for user in &mail.header.to {

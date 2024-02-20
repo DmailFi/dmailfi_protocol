@@ -1,3 +1,19 @@
+type LedgerConfiguration = record {
+  mta_url : text;
+  domain_name : text;
+  token_address : text;
+  version : text;
+  show_logs : bool;
+  permissioned : bool;
+  registry_canister : text;
+};
+type RegistryError = variant { FailedToUpgrade : text; NotFound };
+type Result = variant { Ok : text; Err : RegistryError };
+type Result_1 = variant { Ok; Err : RegistryError };
 service : {
-    "greet": (text) -> (text) query;
+  create_dmail_canister : (text, text, opt LedgerConfiguration) -> ();
+  export_candid : () -> (text) query;
+  greet : (text) -> (text) query;
+  lookup_domain_name : (text) -> (Result) query;
+  upgrade_all_dmail_canisters : () -> (Result_1);
 }

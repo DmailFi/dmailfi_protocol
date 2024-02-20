@@ -157,6 +157,7 @@ name = "dmailfi_core"
 version = "0.1.0"
 dependencies = [
  "candid",
+ "dmailfi_types",
  "email_address",
  "hex",
  "ic-cdk",
@@ -170,9 +171,24 @@ name = "dmailfi_icp_backend"
 version = "0.1.0"
 dependencies = [
  "candid",
- "dmailfi_core",
+ "dmailfi_types",
  "ic-cdk",
  "ic-cdk-timers",
+ "serde",
+ "serde_bytes",
+]
+
+[[package]]
+name = "dmailfi_types"
+version = "0.1.0"
+dependencies = [
+ "candid",
+ "email_address",
+ "hex",
+ "ic-cdk",
+ "ic-cdk-timers",
+ "serde",
+ "serde_bytes",
 ]
 
 [[package]]

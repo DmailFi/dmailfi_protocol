@@ -12,4 +12,6 @@ crate-type = ["cdylib"]
 candid = "0.10"
 ic-cdk = "0.12"
 ic-cdk-timers = "0.6" # Feel free to remove this dependency if you don't need timers
-dmailfi_core = {path = "../dmailfi_core"}
+serde = "1.0.132"
+serde_bytes = "0.11.14"
+dmailfi_types = { path = "../dmailfi_types"}

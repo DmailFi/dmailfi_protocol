@@ -8,27 +8,15 @@
       "package": "dmailfi_icp_backend",
       "type": "rust"
     },
-    "dmailfi_icp_frontend": {
-      "dependencies": [
-        "dmailfi_icp_backend"
-      ],
-      "source": [
-        "src/dmailfi_icp_frontend/dist"
-      ],
-      "type": "assets",
-      "workspace": "dmailfi_icp_frontend"
+   "dmailfi_core": {
+    "candid": "src/dmailfi_core/dmailfi_core.did",
+    "declarations": {
+      "node_compatibility": true
     },
-    "internet_identity": {
-      "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
-      "frontend": {},
-      "remote": {
-        "id": {
-          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
-        }
-      },
-      "type": "custom",
-      "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz"
-    }
+    "package": "dmailfi_core",
+    "type": "rust"
+   }
+   
   },
   "defaults": {
     "build": {
