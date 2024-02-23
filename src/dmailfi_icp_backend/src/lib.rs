@@ -109,6 +109,12 @@ async fn upgrade_all_dmail_canisters() -> Result<(), RegistryError> {
     Ok(())
 }
 
+#[query]
+#[candid_method(query)]
+async fn get_domain_details(domain_name: DOMAIN_NAME) -> Result<std::string::String, RegistryError> {
+    ledger::with(|ledger| ledger.get_domain_details(domain_name))
+}
+
 fn is_custodian() -> Result<(), std::string::String> {
     ledger::with(|ledger|{
         ledger.is_custodian(caller().to_text())
