@@ -46,5 +46,17 @@ impl Ledger {
     pub fn get_all_domain_canisters(&self) -> Vec<String> {
         self.domains.values().cloned().collect()
     }
+    pub fn get_domain_details(&self, domain_name : DOMAIN_NAME) -> Result<String, RegistryError> {
+        match self.domains.get(&domain_name){
+            Some(details) => {
+                let details_str = format!(
+                    "Domain: {} is managed by canister: {}",
+                    domain_name,
+                    details
+                );
+                Ok(details_str)
+            }
+            None => Err(RegistryError::NotFound)
+        }
+    }
 }
-
