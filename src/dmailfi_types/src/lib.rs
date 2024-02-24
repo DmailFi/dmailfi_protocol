@@ -122,11 +122,11 @@ impl Clone for Rcbytes {
     }
 }
 
-#[derive(CandidType, Deserialize, Clone)]
+#[derive(CandidType, Deserialize, Clone, Default)]
 pub struct MailHeader {
     pub from: String,
     pub timestamp: u64,
-    pub content_type: String,
+    pub content_type: Option<String>,
     pub to: Vec<EMAIL_ADDRESS>,
     pub subject: Option<String>,
     pub cc: Option<Vec<String>>,
