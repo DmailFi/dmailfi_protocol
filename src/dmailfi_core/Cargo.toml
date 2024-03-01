@@ -14,5 +14,7 @@ serde = "1.0.132"
 ic-cdk-timers = "0.6" # Feel free to remove this dependency if you don't need timers
 hex = "0.4.3"
 serde_bytes = "0.11.14"
+serde_json = "1.0.114"
 email_address = "0.2.4"
 dmailfi_types = {path = "../dmailfi_types"}
+sha2 = "0.10.8"

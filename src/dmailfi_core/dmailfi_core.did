@@ -1,15 +1,7 @@
 type InboxData = record { read : bool; header : MailHeader };
-type LedgerConfiguration = record {
-  mta_url : text;
-  domain_name : text;
-  token_address : text;
-  version : text;
-  show_logs : bool;
-  permissioned : bool;
-  registry_canister : text;
-};
 type Mail = record { body : vec nat8; header : MailHeader };
 type MailError = variant {
+  HttpSendMail : text;
   PermissionedSystem;
   NoUserAddressFound;
   MailTransferError : text;
@@ -27,7 +19,7 @@ type MailHeader = record {
   bcc : opt vec text;
   subject : opt text;
   from : text;
-  content_type : text;
+  content_type : opt text;
   timestamp : nat64;
 };
 type Newsletter = record { title : text; desciption : text };
@@ -60,5 +52,4 @@ service : () -> {
   submit_mail : (Mail) -> (Result);
   subscribe_to_newsletter : (text, text) -> (Result);
   unsubscribe_to_newsletter : (text, text) -> (Result);
-  update_configuration : (LedgerConfiguration) -> () query;
 }

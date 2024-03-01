@@ -4,7 +4,7 @@ use std::{
 
 use candid::{types::TypeInner, CandidType, Principal};
 use email_address::EmailAddress;
-use ic_cdk::caller;
+use ic_cdk::{api::management_canister::ecdsa::{EcdsaCurve, EcdsaKeyId}, caller};
 use serde::{de::Visitor, Deserialize, Serialize};
 use serde_bytes::ByteBuf;
 
@@ -116,13 +116,21 @@ impl<'de> Deserialize<'de> for Rcbytes {
     }
 }
 
+impl Serialize for Rcbytes {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer {
+            serializer.serialize_bytes(&self.0)
+    }
+}
+
 impl Clone for Rcbytes {
     fn clone(&self) -> Self {
         Self(self.0.clone())
     }
 }
 
-#[derive(CandidType, Deserialize, Clone, Default)]
+#[derive(CandidType, Deserialize, Clone, Default, Serialize)]
 pub struct MailHeader {
     pub from: String,
     pub timestamp: u64,
@@ -138,6 +146,37 @@ impl Clone for Mail {
         Self { header: self.header.clone(), body: self.body.clone() }
     }
 }
+#[derive(CandidType, Deserialize, Serialize)]
+pub struct OutgoingMail {
+    pub id: MAIL_ID,
+    pub header: MailHeader,
+    pub body:Rcbytes
+}
+
+pub enum EcdsaKeyIds {
+    #[allow(unused)]
+    TestKeyLocalDevelopment,
+    #[allow(unused)]
+    TestKey1,
+    #[allow(unused)]
+    ProductionKey1,
+}
+
+impl EcdsaKeyIds {
+    pub fn to_key_id(&self) -> EcdsaKeyId {
+        EcdsaKeyId {
+            curve: EcdsaCurve::Secp256k1,
+            name: match self {
+                Self::TestKeyLocalDevelopment => "dfx_test_key",
+                Self::TestKey1 => "test_key_1",
+                Self::ProductionKey1 => "key_1",
+            }
+            .to_string(),
+        }
+    }
+}
+
+
 #[derive(CandidType, Deserialize)]
 pub struct Mail {
     pub header: MailHeader,
@@ -202,7 +241,8 @@ pub enum MailError {
     AddressExist,
     DomainNotFound,
     MailTransferError(String),
-    NotFound
+    NotFound,
+    HttpSendMail(String)
 }
 
 
@@ -527,5 +567,9 @@ impl Ledger {
         // self._newsletter_subscribers_addr.insert(newsletter_id.clone(), HashSet::new());
         self.newsletter_subscribers.insert(newsletter_id, HashMap::new());
         Ok(())
+    }
+
+    pub fn get_mail_transfer_agent_url(&self) -> String {
+        return self.config.mta_url.clone();
     }
 }

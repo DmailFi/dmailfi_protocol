@@ -1,6 +1,6 @@
 use candid::{candid_method, Principal};
-use ic_cdk::{api::call::{arg_data, RejectionCode}, caller, init, query, update};
-use dmailfi_types::{InboxData, Ledger, LedgerConfiguration, Mail, MailError, Newsletter, EMAIL_ADDRESS, MAIL_ID, NEWSLETTER_ID};
+use ic_cdk::{api::{self, call::{arg_data, RejectionCode}, management_canister::{self, ecdsa::{sign_with_ecdsa, SignWithEcdsaArgument}, http_request::{http_request, CanisterHttpRequestArgument, HttpHeader, HttpMethod, TransformContext, TransformFunc}}}, caller, init, query, update};
+use dmailfi_types::{EcdsaKeyIds, InboxData, Ledger, LedgerConfiguration, Mail, MailError, Newsletter, OutgoingMail, EMAIL_ADDRESS, MAIL_ID, NEWSLETTER_ID};
 
 pub mod ledger {
     use std::cell::RefCell;
@@ -128,18 +128,18 @@ async fn send_mail(mail: Mail) -> Result<(), MailError> {
     let mut failed_domain = vec![];
     for domain in domain_vec {
         // let mx = mail.clone();
-        if domain == platform_domain {
-            let (mail_id_hex,) = ic_cdk::api::management_canister::main::raw_rand()
-                .await
-                .or(Err(MailError::FailedToGenerateMailId))?;
-            let mail_id = hex::encode(mail_id_hex);
+        
 
+        if domain == platform_domain {
+            let mail_id = generate_random_id().await?;
             ledger::with_mut(|ledger| {
                 let result = ledger.submit_mail(mail.clone(), mail_id);
                 if result.is_err() {
                     failed_domain.push(domain.clone())
                 }
             });
+
+            continue;
         }
 
         let lookup_response: Result<(Result<String, String>,), (RejectionCode, String)> =
@@ -153,6 +153,9 @@ async fn send_mail(mail: Mail) -> Result<(), MailError> {
         let (reply,) = lookup_response.unwrap();
 
         if reply.is_err() {
+            let mail_id = generate_random_id().await?;
+            let out_mail = OutgoingMail { id: mail_id, header: mail.header.clone(), body: mail.body.clone() };
+            send_http_mail(out_mail).await?;
             //TODO send HTTP MTA
             continue;
         }
@@ -176,6 +179,68 @@ async fn send_mail(mail: Mail) -> Result<(), MailError> {
         return Err(MailError::MailTransferError(format!("The following domains {} failed", domains)));
     }
     Ok(())
+}
+
+async fn generate_random_id() -> Result<String, MailError> {
+    let (mail_id_hex,) = ic_cdk::api::management_canister::main::raw_rand()
+                .await
+                .or(Err(MailError::FailedToGenerateMailId))?;
+            let mail_id = hex::encode(mail_id_hex);
+            Ok(mail_id)
+}
+
+async fn send_http_mail(out : OutgoingMail) -> Result<(), MailError> {
+    let mta_url = ledger::with(|ledger| ledger.get_mail_transfer_agent_url());
+    let sig = sign_data(&out.id).await.map_err(|err| MailError::HttpSendMail(err))?;
+    let canister_id = api::id().to_text();
+    let headers = vec![HttpHeader{name: "x-sig".to_string(), value: sig}, HttpHeader{name: "x-principal".to_string(), value: canister_id}];
+    let out_json = serde_json::to_string(&out).unwrap();
+    let request = CanisterHttpRequestArgument {
+        url: mta_url,
+        max_response_bytes: Some(256),
+        method: HttpMethod::POST,
+        headers,
+        body: Some(out_json.into_bytes()),
+        transform: Some(TransformContext {
+            function: TransformFunc(candid::Func {
+                principal: ic_cdk::api::id(),
+                method: "transform".to_string(),
+            }),
+            context: vec![],
+        }),
+    };
+
+    match http_request(request, 20_000_000_000).await {
+        Ok((resp,)) => {
+            Ok(())
+        },
+        Err((code, mssg)) => Err(MailError::HttpSendMail(mssg)),
+    }
+}
+
+fn sha256(input: &str) -> [u8; 32] {
+    use sha2::Digest;
+    let mut hasher = sha2::Sha256::new();
+    hasher.update(input);
+    hasher.finalize().into()
+}
+
+async fn sign_data(mssg_hash: &String) -> Result<String, String> {
+    let data = management_canister::ecdsa::sign_with_ecdsa(SignWithEcdsaArgument {
+        message_hash: sha256(mssg_hash).to_vec(),
+        derivation_path: vec![b"asymetric".to_vec()],
+        #[cfg(network = "ic")]
+        key_id: EcdsaKeyIds::ProductionKey1.to_key_id(),
+        #[cfg(network = "local")]
+        key_id: EcdsaKeyIds::TestKeyLocalDevelopment.to_key_id(),
+    })
+    .await;
+
+    match data {
+        Ok((resp,)) => Ok(hex::encode(resp.signature)),
+
+        Err(err) => Err(err.1),
+    }
 }
 
 #[update(guard = "is_custodian")]
