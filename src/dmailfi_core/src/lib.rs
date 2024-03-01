@@ -1,5 +1,5 @@
-use candid::{candid_method, Principal};
-use ic_cdk::{api::{self, call::{arg_data, RejectionCode}, management_canister::{self, ecdsa::{sign_with_ecdsa, SignWithEcdsaArgument}, http_request::{http_request, CanisterHttpRequestArgument, HttpHeader, HttpMethod, TransformContext, TransformFunc}}}, caller, init, query, update};
+use candid::{candid_method, Nat, Principal};
+use ic_cdk::{api::{self, call::{arg_data, RejectionCode}, management_canister::{self, ecdsa::{sign_with_ecdsa, SignWithEcdsaArgument}, http_request::{self, http_request, CanisterHttpRequestArgument, HttpHeader, HttpMethod, HttpResponse, TransformArgs, TransformContext, TransformFunc}}}, caller, init, query, update};
 use dmailfi_types::{EcdsaKeyIds, InboxData, Ledger, LedgerConfiguration, Mail, MailError, Newsletter, OutgoingMail, EMAIL_ADDRESS, MAIL_ID, NEWSLETTER_ID};
 
 pub mod ledger {
@@ -180,6 +180,22 @@ async fn send_mail(mail: Mail) -> Result<(), MailError> {
     }
     Ok(())
 }
+
+#[query]
+fn transform(args: TransformArgs) -> HttpResponse {
+    let mut res = http_request::HttpResponse {
+        status: args.response.status.clone(),
+        body: args.response.body.clone(),
+        headers: vec![],
+    };
+
+    if res.status == Nat::from(200u32) {
+        res.body = args.response.body;
+    } else {
+        ic_cdk::api::print(format!("Received an error from http server: err = {:?}", args));
+    }
+    res
+ }
 
 async fn generate_random_id() -> Result<String, MailError> {
     let (mail_id_hex,) = ic_cdk::api::management_canister::main::raw_rand()
