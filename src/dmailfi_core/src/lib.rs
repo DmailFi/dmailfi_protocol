@@ -275,6 +275,13 @@ async fn send_newsletter(n_id : NEWSLETTER_ID,mail: Mail) -> Result<(), MailErro
     Ok(())
 }
 
+#[query]
+#[candid_method(query)]
+async fn exchange_key() -> String {
+    //TODO (IMplement Exchange Key)
+    todo!()
+}
+
 #[update]
 #[candid_method(update)]
 async fn subscribe_to_newsletter(addr : EMAIL_ADDRESS, n_id: NEWSLETTER_ID) -> Result<(), MailError> {
