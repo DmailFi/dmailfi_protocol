@@ -1,4 +1,7 @@
-
+use std::fs;
+use serde::Deserialize;
+use lettre::transport::smtp::authentication::Credentials;
+use lettre::{transport, Message, SmtpTransport, Transport};
 use candid::{candid_method, encode_args, Principal};
 use dmailfi_types::{LedgerConfiguration, MailError, Rcbytes};
 use ic_cdk::{
@@ -15,6 +18,7 @@ mod ledger {
     use dmailfi_types::Rcbytes;
 
     use crate::types::Ledger;
+    use serde_json::Error;
 
     thread_local!(
         static LEDGER: RefCell<Ledger> = RefCell::new(Ledger::default());
@@ -126,4 +130,52 @@ fn is_custodian() -> Result<(), std::string::String> {
 fn export_candid() -> String {
     ic_cdk::export_candid!();
     __export_service()
+}
+
+#[derive(Deserialize, Debug)]
+struct SmtpServer {
+    address: String,
+    port: u16,
+    username: String,
+    password: String,
+}
+
+// function to read SMTP server details from a configuration file
+fn read_smtp_server_details() -> Result<SmtpServer, MailError> {
+    let config_file = fs::read_to_string("smtp_servers.json")
+        .expect("Unable to read SMTP servers configuration file");
+
+    let servers: Vec<SmtpServer> = serde_json::from_str(&config_file)
+        .expect("Unable to parse SMTP servers configuration file");
+
+    Ok(servers[0])
+}
+
+//function t establish a connection to the SMTP server
+fn connect_smtp_server(servers: Vec<SmtpServer>) -> Result<SmtpTransport, MailError> {
+    let mut transports = Vec::new();
+    for server in servers {
+        let creds = Credentials::new(server.username, server.password);
+        // let transport = SmtpClient::new_simple(&server.address)
+        //     .unwrap()
+        //     .credentials(creds)
+        //     .transport();
+        // transports.push(transport);
+        let transport = transport::smtp::SmtpTransport::starttls_relay(&server.address)
+            .unwrap()
+            .credentials(creds)
+            .build();
+        transports.push(transport);
+    }
+    let server = SmtpServer {
+        address: String::from("your_smtp_address"),
+        port: 587,
+        username: String::from("your_username"),
+        password: String::from("your_password"),
+    };
+
+    let transport = SmtpTransport::relay(&server.address)
+        .unwrap()
+        .build();
+    Ok(transport)
 }
