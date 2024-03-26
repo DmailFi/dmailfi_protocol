@@ -7,14 +7,19 @@ type LedgerConfiguration = record {
   permissioned : bool;
   registry_canister : text;
 };
-type RegistryError = variant { FailedToUpgrade : text; NotFound };
+type RegistryError = variant {
+  FailedToUpgrade : text;
+  NotFound;
+  FailedToCreateCanister;
+  FailedToInstallCode : text;
+};
 type Result = variant { Ok : text; Err : RegistryError };
 type Result_1 = variant { Ok; Err : RegistryError };
 service : {
-  create_dmail_canister : (text, text, opt LedgerConfiguration) -> ();
+  create_dmail_canister : (text, text, opt LedgerConfiguration) -> (Result);
   export_candid : () -> (text) query;
+  get_domain_details : (text) -> (Result) query;
   greet : (text) -> (text) query;
   lookup_domain_name : (text) -> (Result) query;
   upgrade_all_dmail_canisters : () -> (Result_1);
-  get_domain_details : (text) -> (text) query;
-};
+}

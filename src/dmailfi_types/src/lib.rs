@@ -245,6 +245,24 @@ pub enum MailError {
     HttpSendMail(String)
 }
 
+impl std::fmt::Display for MailError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MailError::NoUserAddressFound => f.write_str("No user Address Found"),
+            MailError::InternalSystemMailCollision => f.write_str("A rare event of Hash map collision"),
+            MailError::FailedToGenerateMailId => f.write_str("System failed to Generate Mail Id"),
+            MailError::MailNotFound => f.write_str("Mail not found"),
+            MailError::NotAuthorized => f.write_str("You are not authorized"),
+            MailError::PermissionedSystem => f.write_str("This is a Permissioned System"),
+            MailError::AddressExist => f.write_str("Address do exist"),
+            MailError::DomainNotFound => f.write_str("Domain not Found"),
+            MailError::MailTransferError(_) => f.write_str("Mail Transfer Error"),
+            MailError::NotFound => f.write_str("Not Found"),
+            MailError::HttpSendMail(_) => f.write_str("Error using internal HTTP outcall"),
+        }
+    }
+}
+
 
 #[derive(CandidType, Deserialize)]
 pub struct InboxData {

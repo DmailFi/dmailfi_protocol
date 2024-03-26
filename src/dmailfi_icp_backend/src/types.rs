@@ -14,7 +14,9 @@ pub struct Ledger {
 #[derive(CandidType, Deserialize)]
 pub enum RegistryError {
     NotFound,
-    FailedToUpgrade(String)
+    FailedToUpgrade(String),
+    FailedToCreateCanister,
+    FailedToInstallCode(String)
 }
 
 impl Ledger {

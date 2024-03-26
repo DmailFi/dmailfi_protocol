@@ -1,3 +1,9 @@
+type HttpHeader = record { value : text; name : text };
+type HttpResponse = record {
+  status : nat;
+  body : vec nat8;
+  headers : vec HttpHeader;
+};
 type InboxData = record { read : bool; header : MailHeader };
 type Mail = record { body : vec nat8; header : MailHeader };
 type MailError = variant {
@@ -29,12 +35,14 @@ type Result_2 = variant { Ok : Mail; Err : MailError };
 type Result_3 = variant { Ok : vec InboxData; Err : MailError };
 type Result_4 = variant { Ok : Newsletter; Err : MailError };
 type Result_5 = variant { Ok : vec text; Err : MailError };
+type TransformArgs = record { context : vec nat8; response : HttpResponse };
 service : () -> {
   create_newsletter : (Newsletter) -> (Result);
   create_user : (text, text) -> (Result);
   delete_mail : (text) -> (Result);
   delete_self : () -> (Result);
   delete_user : (text) -> (Result);
+  exchange_key : () -> (text) query;
   export_candid : () -> (text) query;
   get_all_mail_count : () -> (Result_1) query;
   get_domain_name : () -> (text) query;
@@ -51,5 +59,6 @@ service : () -> {
   send_newsletter : (text, Mail) -> (Result);
   submit_mail : (Mail) -> (Result);
   subscribe_to_newsletter : (text, text) -> (Result);
+  transform : (TransformArgs) -> (HttpResponse) query;
   unsubscribe_to_newsletter : (text, text) -> (Result);
 }

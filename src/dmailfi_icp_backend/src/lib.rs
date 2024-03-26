@@ -2,9 +2,9 @@
 use candid::{candid_method, encode_args, Principal};
 use dmailfi_types::{LedgerConfiguration, MailError, Rcbytes};
 use ic_cdk::{
-    api::management_canister::{
+    api::{is_controller, management_canister::{
         self, main::{CanisterInstallMode, CreateCanisterArgument, InstallCodeArgument}, provisional::CanisterSettings
-    }, caller, query, update
+    }}, caller, post_upgrade, query, update
 };
 use ledger::DMAILFI_WASM;
 use types::{RegistryError, DOMAIN_NAME};
@@ -45,7 +45,7 @@ async fn lookup_domain_name(
 
 #[update(guard = "is_custodian")]
 #[candid_method(update)]
-async fn create_dmail_canister(domain_name: DOMAIN_NAME, controller_principal: String, config : Option<LedgerConfiguration>) {
+async fn create_dmail_canister(domain_name: DOMAIN_NAME, controller_principal: String, config : Option<LedgerConfiguration>) -> Result<String, RegistryError> {
     let registry_id = ic_cdk::api::id();
     let arg = CreateCanisterArgument {
         settings: Some(CanisterSettings {
@@ -58,7 +58,7 @@ async fn create_dmail_canister(domain_name: DOMAIN_NAME, controller_principal: S
     };
     let (cr,) = ic_cdk::api::management_canister::main::create_canister(arg, 9_000_000_000_000)
         .await
-        .unwrap();
+        .map_err(|_| RegistryError::FailedToCreateCanister)?;
 
     let Rcbytes(wasm) = DMAILFI_WASM.with_borrow(|f| f.clone());
 
@@ -74,12 +74,14 @@ async fn create_dmail_canister(domain_name: DOMAIN_NAME, controller_principal: S
             ledger.add_to_pending_canister(cr.canister_id, Principal::from_text(controller_principal).unwrap());
         });
 
-        return ;
+        return Err(RegistryError::FailedToInstallCode(cr.canister_id.to_string()));
     }
 
     ledger::with_mut(|ledger| {
         ledger.add_domain(domain_name, cr.canister_id.to_text())
-    })
+    });
+
+    Ok(cr.canister_id.to_string())
 
 }
 
@@ -116,6 +118,9 @@ async fn get_domain_details(domain_name: DOMAIN_NAME) -> Result<std::string::Str
 }
 
 fn is_custodian() -> Result<(), std::string::String> {
+    if is_controller(&caller()) {
+        return Ok(());
+    }
     ledger::with(|ledger|{
         ledger.is_custodian(caller().to_text())
     })
