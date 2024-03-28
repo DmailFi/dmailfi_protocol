@@ -194,6 +194,15 @@ pub struct Newsletter {
     desciption : String
 }
 
+#[derive(CandidType, Deserialize)]
+pub enum RegistryError {
+    NotFound,
+    FailedToUpgrade(String),
+    FailedToCreateCanister,
+    FailedToInstallCode(String)
+}
+
+
 
 pub struct Profile {
     name : String,

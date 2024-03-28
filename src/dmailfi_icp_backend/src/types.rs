@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use candid::{CandidType, Deserialize, Principal};
+use dmailfi_types::RegistryError;
 
 pub type DOMAIN_NAME = String;
 pub type CANISTER_ID = Principal;
@@ -11,13 +12,6 @@ pub struct Ledger {
     pending_canister: HashMap<CANISTER_ID, Principal>
 }
 
-#[derive(CandidType, Deserialize)]
-pub enum RegistryError {
-    NotFound,
-    FailedToUpgrade(String),
-    FailedToCreateCanister,
-    FailedToInstallCode(String)
-}
 
 impl Ledger {
     pub fn lookup_domain_name(&self, domain_name : DOMAIN_NAME) -> Result<String, RegistryError> {

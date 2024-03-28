@@ -1,13 +1,13 @@
 
 use candid::{candid_method, encode_args, Principal};
-use dmailfi_types::{LedgerConfiguration, MailError, Rcbytes};
+use dmailfi_types::{LedgerConfiguration, MailError, Rcbytes, RegistryError};
 use ic_cdk::{
     api::{is_controller, management_canister::{
         self, main::{CanisterInstallMode, CreateCanisterArgument, InstallCodeArgument}, provisional::CanisterSettings
     }}, caller, post_upgrade, query, update
 };
 use ledger::DMAILFI_WASM;
-use types::{RegistryError, DOMAIN_NAME};
+use types::{DOMAIN_NAME};
 mod types;
 mod ledger {
     use std::{cell::RefCell, sync::Arc};
