@@ -1,0 +1,1 @@
+export const MAINNET_DMAILFI_REGISTRY_CANISTER_ID = "fbgbfbgbgbbfgbfbfbfg"

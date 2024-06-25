@@ -8,6 +8,8 @@ pub type CANISTER_ID = Principal;
 #[derive(Default)]
 pub struct Ledger {
     domains : HashMap<DOMAIN_NAME, String>,
+    // Principal
+    customers : HashMap<Principal, HashSet<CANISTER_ID>>,
     custodians: HashSet<String>,
     pending_canister: HashMap<CANISTER_ID, Principal>
 }
@@ -54,5 +56,15 @@ impl Ledger {
             }
             None => Err(RegistryError::NotFound)
         }
+    }
+
+    pub fn lookup_user(&self, user : Principal) -> Result<Vec<String>, RegistryError> {
+       let canister_id_opt = self.customers.get(&user);
+       if canister_id_opt.is_none() {
+        return  Err(RegistryError::NotFound);
+       } else {
+        let canister_id_str = canister_id_opt.unwrap().iter().map(|p| p.to_text()).collect();
+        return Ok(canister_id_str);
+       }
     }
 }

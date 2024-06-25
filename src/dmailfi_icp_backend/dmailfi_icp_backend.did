@@ -21,5 +21,6 @@ service : {
   get_domain_details : (text) -> (Result) query;
   greet : (text) -> (text) query;
   lookup_domain_name : (text) -> (Result) query;
+  lookup_user : () -> (Result) query;
   upgrade_all_dmail_canisters : () -> (Result_1);
 }

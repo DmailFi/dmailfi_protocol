@@ -4,7 +4,13 @@ type HttpResponse = record {
   body : vec nat8;
   headers : vec HttpHeader;
 };
-type InboxData = record { read : bool; header : MailHeader };
+type InboxData = record {
+  content : opt vec nat8;
+  mail_id : text;
+  read : bool;
+  header : MailHeader;
+};
+type LedgerInfo = record { name : text; description : text };
 type Mail = record { body : vec nat8; header : MailHeader };
 type MailError = variant {
   HttpSendMail : text;
@@ -12,6 +18,7 @@ type MailError = variant {
   NoUserAddressFound;
   MailTransferError : text;
   AddressExist;
+  GeneralError : text;
   InternalSystemMailCollision;
   FailedToGenerateMailId;
   NotFound;
@@ -25,8 +32,11 @@ type MailHeader = record {
   bcc : opt vec text;
   subject : opt text;
   from : text;
+  sender_canister_id : opt text;
   content_type : opt text;
+  sender_channel : opt text;
   timestamp : nat64;
+  sender_name : opt text;
 };
 type Newsletter = record { title : text; desciption : text };
 type Result = variant { Ok; Err : MailError };
@@ -46,6 +56,7 @@ service : () -> {
   export_candid : () -> (text) query;
   get_all_mail_count : () -> (Result_1) query;
   get_domain_name : () -> (text) query;
+  get_info : () -> (LedgerInfo) query;
   get_mail : (text) -> (Result_2);
   get_mail_count : () -> (Result_1) query;
   get_mails : (opt nat64) -> (Result_3) query;
@@ -57,6 +68,7 @@ service : () -> {
   restore_mail : (text) -> (Result);
   send_mail : (Mail) -> (Result);
   send_newsletter : (text, Mail) -> (Result);
+  set_info : (LedgerInfo) -> ();
   submit_mail : (Mail) -> (Result);
   subscribe_to_newsletter : (text, text) -> (Result);
   transform : (TransformArgs) -> (HttpResponse) query;

@@ -1,6 +1,6 @@
 
 use candid::{candid_method, encode_args, Principal};
-use dmailfi_types::{LedgerConfiguration, MailError, Rcbytes, RegistryError};
+use dmailfi_types::{LedgerConfiguration, MailError, Rcbytes, RegistryError, LOOKUP_DOMAIN_CALL_PAYMENT};
 use ic_cdk::{
     api::{is_controller, management_canister::{
         self, main::{CanisterInstallMode, CreateCanisterArgument, InstallCodeArgument}, provisional::CanisterSettings
@@ -40,7 +40,12 @@ fn greet(name: String) -> String {
 async fn lookup_domain_name(
     domain_name: DOMAIN_NAME,
 ) -> Result<std::string::String, RegistryError> {
-    ledger::with(|ledger| ledger.lookup_domain_name(domain_name))
+    if ic_cdk::api::call::msg_cycles_available() < LOOKUP_DOMAIN_CALL_PAYMENT {
+        return Err(RegistryError::GeneralError("Not Enough Cycles".to_string()));
+    }
+    let result = ledger::with(|ledger| ledger.lookup_domain_name(domain_name));
+    ic_cdk::api::call::msg_cycles_accept(LOOKUP_DOMAIN_CALL_PAYMENT);
+    result
 }
 
 #[update(guard = "is_custodian")]
@@ -117,6 +122,12 @@ async fn get_domain_details(domain_name: DOMAIN_NAME) -> Result<std::string::Str
     ledger::with(|ledger| ledger.get_domain_details(domain_name))
 }
 
+#[query(guard = "not_anonymous")]
+#[candid_method(query)]
+async fn lookup_user() -> Result<Vec<String>, RegistryError> {
+    ledger::with(|ledger| ledger.lookup_user(caller()))
+}
+
 fn is_custodian() -> Result<(), std::string::String> {
     if is_controller(&caller()) {
         return Ok(());
@@ -124,6 +135,14 @@ fn is_custodian() -> Result<(), std::string::String> {
     ledger::with(|ledger|{
         ledger.is_custodian(caller().to_text())
     })
+}
+
+fn not_anonymous() -> Result<(), std::string::String> {
+    if caller() == Principal::anonymous() {
+        Err("You are anonymous".to_string())
+    } else {
+        Ok(())
+    }
 }
 
 #[query]

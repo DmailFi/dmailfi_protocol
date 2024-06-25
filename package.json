@@ -17,6 +17,8 @@
   },
   "type": "module",
   "workspaces": [
-    "src/dmailfi_icp_frontend"
+    "src/dmailfi_icp_frontend",
+    "src/dmailfi_web_inbox",
+    "src/dmailfi_sdk"
   ]
 }
